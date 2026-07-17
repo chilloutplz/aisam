@@ -96,20 +96,28 @@ def call_openrouter(system_prompt, messages):
 def chat_proxy(request, unit_id):
     """학생 채팅 메시지를 받아서, 서버가 대신 LLM을 호출해 답을 돌려주는 프록시.
     이 방식이면 학생(아들) 쪽에서는 별도 로그인/계정이 전혀 필요 없다."""
+    print(f"[chat_proxy] 요청 도착: unit_id={unit_id}", flush=True)
+
     try:
         unit = Unit.objects.get(id=unit_id, is_ready=True)
     except Unit.DoesNotExist:
+        print(f"[chat_proxy] unit {unit_id} 없음", flush=True)
         return JsonResponse({"error": "unit not found"}, status=404)
 
     try:
         payload = json.loads(request.body)
         messages = payload["messages"]  # [{role: "user"|"assistant", content: "..."}]
     except (KeyError, json.JSONDecodeError):
+        print("[chat_proxy] 잘못된 payload", flush=True)
         return JsonResponse({"error": "invalid payload, expected {messages: [...]}"}, status=400)
 
     system_prompt = build_system_prompt(unit.content, unit.title)
+    print("[chat_proxy] OpenRouter 호출 시작...", flush=True)
     reply, error = call_openrouter(system_prompt, messages)
 
     if error:
+        print(f"[chat_proxy] OpenRouter 에러: {error}", flush=True)
         return JsonResponse({"error": error}, status=502)
+
+    print("[chat_proxy] OpenRouter 응답 성공", flush=True)
     return JsonResponse({"reply": reply})
