@@ -72,16 +72,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# 프론트엔드 배포 주소를 .env에 CORS_ALLOWED_ORIGINS=https://xxx.cloudtype.app 형태로 넣으면 그 값을 씀.
-# 안 넣으면 로컬 개발 서버(5173)만 허용.
+# 프론트엔드 배포 주소를 .env에 CORS_ALLOWED_ORIGINS=https://xxx.cloudtype.app 형태로
+# 넣으면 그 주소만 허용(더 안전). 안 넣으면 전체 허용 — 개인/가족용 소규모
+# 프로젝트라 지금은 이렇게 두되, 나중에 실제 배포 도메인이 안정되면 위처럼
+# 좁혀서 넣는 걸 권장.
 _cors_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
 if _cors_env:
     CORS_ALLOWED_ORIGINS = [o.strip() for o in _cors_env.split(",")]
 else:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
+    CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'config.urls'
 
