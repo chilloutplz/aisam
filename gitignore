@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+db.sqlite3
+staticfiles/
+
+# 환경변수 (절대 커밋하지 않음)
+.env
+.env.local
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store

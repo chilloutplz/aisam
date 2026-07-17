@@ -1,0 +1,51 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: #16211c;
+  font-family: 'Noto Sans KR', sans-serif;
+  color: #f1ede4;
+}
+
+.chalk-title {
+  font-family: 'Gowun Dodum', sans-serif;
+  text-shadow: 0 0 1px rgba(241, 237, 228, 0.35), 0 0 12px rgba(241, 237, 228, 0.08);
+}
+
+.chalk-heading {
+  font-family: 'Gowun Batang', serif;
+}
+
+.page {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 32px 16px 24px;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+input {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(241, 237, 228, 0.2);
+  border-radius: 3px;
+}
