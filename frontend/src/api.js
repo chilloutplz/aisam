@@ -19,6 +19,8 @@ export async function sendChatMessage(unitId, messages) {
     body: JSON.stringify({ messages }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "답을 가져오지 못했어요");
+  // 상태코드가 아니라 응답 body의 error 필드로 판단 (일부 배포 플랫폼 게이트웨이가
+  // 4xx/5xx 응답을 자체 에러 페이지로 가로채는 것을 피하기 위해 항상 200으로 옴)
+  if (data.error) throw new Error(data.error);
   return data.reply;
 }

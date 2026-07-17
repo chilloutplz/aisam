@@ -102,14 +102,14 @@ def chat_proxy(request, unit_id):
         unit = Unit.objects.get(id=unit_id, is_ready=True)
     except Unit.DoesNotExist:
         print(f"[chat_proxy] unit {unit_id} 없음", flush=True)
-        return JsonResponse({"error": "unit not found"}, status=404)
+        return JsonResponse({"error": "unit not found"}, status=200)
 
     try:
         payload = json.loads(request.body)
         messages = payload["messages"]  # [{role: "user"|"assistant", content: "..."}]
     except (KeyError, json.JSONDecodeError):
         print("[chat_proxy] 잘못된 payload", flush=True)
-        return JsonResponse({"error": "invalid payload, expected {messages: [...]}"}, status=400)
+        return JsonResponse({"error": "invalid payload, expected {messages: [...]}"}, status=200)
 
     system_prompt = build_system_prompt(unit.content, unit.title)
     print("[chat_proxy] OpenRouter 호출 시작...", flush=True)
@@ -117,7 +117,10 @@ def chat_proxy(request, unit_id):
 
     if error:
         print(f"[chat_proxy] OpenRouter 에러: {error}", flush=True)
-        return JsonResponse({"error": error}, status=502)
+        # 상태코드를 200으로 주는 이유: 클라우드타입 같은 일부 배포 플랫폼의 게이트웨이가
+        # 4xx/5xx 응답을 자체 에러 페이지로 가로채서 바꿔버리는 경우가 있음.
+        # 그래서 항상 200으로 응답하고, 에러 여부는 body의 "error" 필드로 프론트엔드가 판단하게 함.
+        return JsonResponse({"error": error}, status=200)
 
     print("[chat_proxy] OpenRouter 응답 성공", flush=True)
     return JsonResponse({"reply": reply})
