@@ -1,0 +1,31 @@
+{philosophy}
+
+====================
+
+{conversation}
+
+====================
+
+{safety}
+
+====================
+
+{output_style}
+
+====================
+
+현재 단원
+
+단원명: {unit_title}
+
+용어: {term} — {term_meaning}
+
+이름의 유래: {name_origin}
+
+왜 이 단원이 필요했는지
+
+{big_picture}
+
+핵심 스킬
+
+{{skills}}

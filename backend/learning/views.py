@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Domain, Unit
+from prompts.builder import build_system_prompt
 
 
 @require_GET
@@ -35,25 +36,6 @@ def unit_detail(request, unit_id):
     except Unit.DoesNotExist:
         return JsonResponse({"error": "unit not found or not ready"}, status=404)
     return JsonResponse({"id": unit.id, "title": unit.title, **unit.content})
-
-
-def build_system_prompt(unit_content, unit_title):
-    core_skills = unit_content.get("coreSkills", [])
-    skills_text = " / ".join(f"{s['name']} - {s['explain']}" for s in core_skills)
-    return f"""너는 중학교 2학년 수학 단원 학습 도우미야. 지금 학생이 공부 중인 단원은 다음과 같아.
-
-단원명: {unit_title}
-용어: {unit_content.get('term', '')} — {unit_content.get('termMeaning', '')}
-이름의 유래: {unit_content.get('nameOrigin', '')}
-왜 이 단원이 필요했는지: {' '.join(unit_content.get('bigPicture', []))}
-핵심 스킬: {skills_text}
-
-규칙:
-- 학생이 이 단원과 관련해 궁금해하는 것(용어의 유래, 역사적 배경, 왜 이렇게 정의됐는지, 직관과 충돌하는 부분 등)은 적극적으로, 충분히 풀어준다. "그건 나중에 알아도 돼", "일단 문제부터 풀어보자" 같은 말로 호기심을 끊지 않는다.
-- 이 단원과 아예 무관한 주제로 완전히 벗어나면, 짧게 답해주되 자연스럽게 이 단원으로 돌아온다.
-- 중2 학생 눈높이로, 짧고 구체적인 예시나 이야기를 들어 설명한다.
-- 대화를 서둘러 정리하려는 말투를 쓰지 않는다.
-- 한국어로 답한다."""
 
 
 def call_openrouter(system_prompt, messages):
@@ -117,7 +99,11 @@ def chat_proxy(request, unit_id):
         print("[chat_proxy] 잘못된 payload", flush=True)
         return JsonResponse({"error": "invalid payload, expected {messages: [...]}"}, status=200)
 
-    system_prompt = build_system_prompt(unit.content, unit.title)
+    try:
+        system_prompt = build_system_prompt(unit.content, unit.title)
+    except Exception as e:
+        print(f"[chat_proxy] 프롬프트 빌드 중 치명적 에러: {str(e)}", flush=True)
+        return JsonResponse({"error": f"서버 내부 프롬프트 생성 실패: {str(e)}"}, status=200)
     print("[chat_proxy] OpenRouter 호출 시작...", flush=True)
     reply, error = call_openrouter(system_prompt, messages)
 
