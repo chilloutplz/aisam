@@ -78,11 +78,17 @@ def call_openrouter(system_prompt, messages):
 
     try:
         resp = requests.post(url, headers=headers, json=body, timeout=30)
-        if resp.status_code == 429:
-            return None, (
-                "오늘 무료 사용 횟수를 다 썼어요 (OpenRouter 무료 모델은 하루 50회 제한). "
-                "내일 다시 쓰거나, OpenRouter 계정에 $10을 충전하면 하루 1000회로 늘어나요."
-            )
+        # if resp.status_code == 429:
+            # return None, (
+            #     "오늘 무료 사용 횟수를 다 썼어요 (OpenRouter 무료 모델은 하루 50회 제한). "
+            #     "내일 다시 쓰거나, OpenRouter 계정에 $10을 충전하면 하루 1000회로 늘어나요."
+            # )
+            
+        if resp.status_code != 200:
+            print(resp.status_code)
+            print(resp.text)
+            return None, resp.text
+        
         resp.raise_for_status()
         data = resp.json()
         text = data["choices"][0]["message"]["content"]
