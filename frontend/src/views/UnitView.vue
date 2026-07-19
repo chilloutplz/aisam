@@ -139,6 +139,9 @@ async function loadUnit() {
   error.value = null;
   try {
     unit.value = await fetchUnit(props.id);
+    // 목차나 이전/다음 버튼을 거치지 않고 URL로 직접 들어온 경우에도
+    // "마지막으로 보던 단원"이 정확히 기록되도록 여기서도 저장한다.
+    saveState({ lastUnitId: Number(props.id) });
   } catch (e) {
     error.value = e.message;
   } finally {

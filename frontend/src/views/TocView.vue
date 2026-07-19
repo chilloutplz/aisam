@@ -67,7 +67,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { fetchCurriculum } from "../api.js";
-import { saveState, clearState } from "../storage.js";
+import { saveState, clearState, loadState } from "../storage.js";
 
 const router = useRouter();
 
@@ -120,7 +120,20 @@ onMounted(async () => {
     domains.value = data.domains;
     totalCount.value = domains.value.reduce((sum, d) => sum + d.units.length, 0);
     doneCount.value = domains.value.reduce((sum, d) => sum + doneInDomain(d), 0);
-    if (domains.value.length) openDomain.value = domains.value[0].domain;
+
+    // 마지막으로 보던 단원이 있으면, 그 단원이 속한 영역/학기를 찾아서 펼쳐준다.
+    const state = loadState();
+    const lastUnitDomain = state?.lastUnitId
+      ? domains.value.find((d) => d.units.some((u) => u.id === state.lastUnitId))
+      : null;
+
+    if (lastUnitDomain) {
+      openDomain.value = lastUnitDomain.domain;
+      const sem = SEMESTERS_MAP.find((s) => s.domains.includes(lastUnitDomain.domain));
+      if (sem) openSemester.value = sem.label;
+    } else if (domains.value.length) {
+      openDomain.value = domains.value[0].domain;
+    }
   } catch (e) {
     error.value = e.message;
   } finally {
