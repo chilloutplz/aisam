@@ -53,6 +53,7 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
+import { saveState } from "../storage.js";
 
 const router = useRouter();
 
@@ -89,7 +90,10 @@ function selectSubject(s) {
 }
 
 watch(ready, (val) => {
-  if (val) router.push({ name: "toc" });
+  if (val) {
+    saveState({ level: level.value, grade: grade.value, subject: subject.value, lastUnitId: null });
+    router.push({ name: "toc" });
+  }
 });
 </script>
 

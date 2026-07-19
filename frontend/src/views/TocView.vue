@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <button class="back" @click="$router.push({ name: 'home' })">◂ 학교급·과목 다시 고르기</button>
+    <button class="back" @click="goHome">◂ 학교급·과목 다시 고르기</button>
 
     <div class="breadcrumb">수학 <span class="sep">▸</span> 중학교 2학년</div>
     <h1 class="chalk-title" style="font-size: 32px; margin: 0 0 16px;">중2 수학 목차</h1>
@@ -46,7 +46,7 @@
                 :class="{ done: u.status === 'done' }"
                 :style="u.status === 'done' ? { borderColor: d.chalk + '55' } : {}"
                 :disabled="u.status !== 'done'"
-                @click="u.status === 'done' && $router.push({ name: 'unit', params: { id: u.id } })"
+                @click="u.status === 'done' && openUnit(u.id)"
               >
                 <span class="dot" :style="{ color: u.status === 'done' ? d.chalk : 'rgba(241,237,228,0.25)' }">
                   {{ u.status === 'done' ? '●' : '○' }}
@@ -65,7 +65,21 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { fetchCurriculum } from "../api.js";
+import { saveState, clearState } from "../storage.js";
+
+const router = useRouter();
+
+function openUnit(unitId) {
+  saveState({ lastUnitId: unitId });
+  router.push({ name: "unit", params: { id: unitId } });
+}
+
+function goHome() {
+  clearState();
+  router.push({ name: "home" });
+}
 
 const SEMESTERS_MAP = [
   { label: "1학기", domains: ["수와 연산", "문자와 식"] },

@@ -32,12 +32,26 @@ def curriculum_list(request):
 
 @require_GET
 def unit_detail(request, unit_id):
-    """단원 하나의 전체 콘텐츠(서사/이름유래/스킬/문제)를 내려주는 API"""
+    """단원 하나의 전체 콘텐츠(서사/이름유래/스킬/문제)를 내려주는 API.
+    content 안의 prevSlug/nextSlug를 실제 단원(id, title)으로 풀어서 함께 내려준다
+    (프론트엔드가 이전/다음 단원을 클릭해서 바로 이동할 수 있도록)."""
     try:
         unit = Unit.objects.get(id=unit_id, is_ready=True)
     except Unit.DoesNotExist:
         return JsonResponse({"error": "unit not found or not ready"}, status=404)
-    return JsonResponse({"id": unit.id, "title": unit.title, **unit.content})
+
+    data = {"id": unit.id, "title": unit.title, **unit.content}
+
+    prev_slug = data.pop("prevSlug", None)
+    next_slug = data.pop("nextSlug", None)
+
+    prev_unit = Unit.objects.filter(slug=prev_slug, is_ready=True).first() if prev_slug else None
+    next_unit = Unit.objects.filter(slug=next_slug, is_ready=True).first() if next_slug else None
+
+    data["prevUnit"] = {"id": prev_unit.id, "title": prev_unit.title} if prev_unit else None
+    data["nextUnit"] = {"id": next_unit.id, "title": next_unit.title} if next_unit else None
+
+    return JsonResponse(data)
 
 
 from .prompts import build_system_prompt

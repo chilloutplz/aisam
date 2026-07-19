@@ -8,8 +8,19 @@
 
       <div class="trail">
         <div class="trail-row">
-          <span class="trail-side">◂ {{ unit.prev }}</span>
-          <span class="trail-side right">{{ unit.next }} ▸</span>
+          <button
+            v-if="unit.prevUnit"
+            class="trail-side trail-link"
+            @click="goToUnit(unit.prevUnit.id)"
+          >◂ {{ unit.prevUnit.title }}</button>
+          <span v-else class="trail-side trail-empty">처음 단원이야</span>
+
+          <button
+            v-if="unit.nextUnit"
+            class="trail-side right trail-link"
+            @click="goToUnit(unit.nextUnit.id)"
+          >{{ unit.nextUnit.title }} ▸</button>
+          <span v-else class="trail-side right trail-empty">마지막 단원이야</span>
         </div>
         <div class="trail-line"></div>
         <div class="trail-center">
@@ -85,11 +96,20 @@
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from "vue";
+import { useRouter } from "vue-router";
 import { fetchUnit, sendChatMessage } from "../api.js";
 import Diagram from "../components/Diagram.vue";
 import QuizSection from "../components/QuizSection.vue";
+import { saveState } from "../storage.js";
+
+const router = useRouter();
 
 const props = defineProps({ id: { type: [String, Number], required: true } });
+
+function goToUnit(unitId) {
+  saveState({ lastUnitId: unitId });
+  router.push({ name: "unit", params: { id: unitId } });
+}
 
 const SECTIONS = [
   { key: "concept", label: "개념 이해", icon: "📖", chalk: "#f2c94c" },
@@ -173,6 +193,15 @@ async function sendMessage() {
 }
 .trail-side { max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trail-side.right { text-align: right; }
+.trail-link {
+  color: #8fc4e8;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  background: none;
+  padding: 0;
+}
+.trail-empty { color: rgba(241, 237, 228, 0.3); }
 .trail-line {
   margin-top: 8px;
   height: 0;

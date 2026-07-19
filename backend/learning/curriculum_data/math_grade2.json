@@ -13,9 +13,7 @@
           "slug": "integer-rational-operations",
           "content": {
             "id": "integer-rational-operations",
-            "prev": "정수와 유리수의 개념(중1)",
             "title": "정수와 유리수의 사칙연산",
-            "next": "유리수와 순환소수",
             "term": "사칙연산",
             "termMeaning": "덧셈, 뺄셈, 곱셈, 나눗셈의 네 가지 기본 계산",
             "bigPicture": [
@@ -112,7 +110,8 @@
                   "a": "a×b와 a÷b는 둘 다 음수예요(부호가 다른 곱셈·나눗셈). a-b는 a+(-b)로 바꿔보면, b가 양수라서 -b는 음수가 되고, 결국 '음수+음수'가 되니까 a-b도 항상 음수예요."
                 }
               ]
-            }
+            },
+            "nextSlug": "rational-repeating-decimal"
           }
         },
         {
@@ -121,9 +120,7 @@
           "slug": "rational-repeating-decimal",
           "content": {
             "id": "rational-repeating-decimal",
-            "prev": "정수와 유리수의 사칙연산",
             "title": "유리수와 순환소수",
-            "next": "단항식과 다항식의 계산",
             "term": "유리수",
             "termMeaning": "정수 a와 0이 아닌 정수 b로, a/b 꼴로 나타낼 수 있는 수",
             "bigPicture": [
@@ -220,7 +217,9 @@
                   "a": "무리수예요. 유리수가 되려면 소수점 아래가 어느 순간부터 똑같은 마디가 반복돼야 하는데, 이 수는 자릿수가 늘어날수록 계속 새로운 숫자 조합이 나와서 절대 같은 패턴이 반복되지 않아요. 규칙성이 있어 보여도 '반복'은 아니라는 게 핵심이에요."
                 }
               ]
-            }
+            },
+            "prevSlug": "integer-rational-operations",
+            "nextSlug": "monomial-polynomial"
           }
         },
         {
@@ -229,9 +228,7 @@
           "slug": "monomial-polynomial",
           "content": {
             "id": "monomial-polynomial",
-            "prev": "유리수와 순환소수",
             "title": "단항식과 다항식의 계산",
-            "next": "일차부등식",
             "term": "단항식과 다항식",
             "termMeaning": "단항식은 숫자와 문자의 곱으로만 이루어진 식(예: 3x²), 다항식은 단항식 여러 개를 더하거나 뺀 식(예: 3x² + 2x - 1)",
             "bigPicture": [
@@ -330,7 +327,9 @@
                   "visual": "two_squares_ab"
                 }
               ]
-            }
+            },
+            "prevSlug": "rational-repeating-decimal",
+            "nextSlug": "linear-inequality"
           }
         }
       ]
@@ -346,9 +345,7 @@
           "slug": "linear-inequality",
           "content": {
             "id": "linear-inequality",
-            "prev": "단항식과 다항식의 계산",
             "title": "일차부등식",
-            "next": "연립일차방정식",
             "term": "부등식",
             "termMeaning": "부등호(<, >, ≤, ≥)를 사용해 두 수나 식의 대소 관계를 나타낸 식",
             "bigPicture": [
@@ -445,7 +442,9 @@
                   "a": "ax>4로 정리한 뒤, 해가 x<-2처럼 방향이 뒤집힌 형태가 되려면 a로 나눌 때 부등호가 뒤집혀야 해요 — 즉 a는 음수여야 해요. 4/a=-2를 풀면 a=-2. 실제로 확인하면: -2x+3>7 → -2x>4 → 음수로 나누며 방향이 뒤집혀 x<-2. 부등호가 뒤집히는 원리를 거꾸로 활용해야 풀리는 문제예요."
                 }
               ]
-            }
+            },
+            "prevSlug": "monomial-polynomial",
+            "nextSlug": "system-linear-equations"
           }
         },
         {
@@ -454,9 +453,7 @@
           "slug": "system-linear-equations",
           "content": {
             "id": "system-linear-equations",
-            "prev": "일차부등식",
             "title": "연립일차방정식",
-            "next": "일차함수와 그래프",
             "term": "연립방정식",
             "termMeaning": "미지수가 2개인 방정식 두 개를 동시에 만족시키는 해를 찾는 방정식의 묶음",
             "bigPicture": [
@@ -554,7 +551,9 @@
                   "a": "두 식이 완전히 같은 직선이 되어야 해요. 즉 a=2(x의 계수가 같아야 함)이고 b=7(상수도 같아야 함)이에요. 이 조건이 아니면 해가 없거나(a=2, b≠7) 하나로 정해져요(a≠2)."
                 }
               ]
-            }
+            },
+            "prevSlug": "linear-inequality",
+            "nextSlug": "linear-function-graph"
           }
         }
       ]
@@ -570,9 +569,7 @@
           "slug": "linear-function-graph",
           "content": {
             "id": "linear-function-graph",
-            "prev": "연립일차방정식",
             "title": "일차함수와 그래프",
-            "next": "일차함수와 일차방정식의 관계",
             "term": "함수",
             "termMeaning": "한 변수(x)의 값이 정해지면 다른 변수(y)의 값이 오직 하나로 정해지는 대응 관계",
             "bigPicture": [
@@ -669,7 +666,9 @@
                   "a": "두 식을 연립방정식처럼 풀면 돼요: 2x+1=-x+7 → 3x=6 → x=2, y=2(2)+1=5. 만나는 점은 (2,5). 이건 사실 연립방정식 단원에서 배운 '두 직선의 교점 찾기'와 완전히 같은 방법이에요."
                 }
               ]
-            }
+            },
+            "prevSlug": "system-linear-equations",
+            "nextSlug": "function-equation-relation"
           }
         },
         {
@@ -678,9 +677,7 @@
           "slug": "function-equation-relation",
           "content": {
             "id": "function-equation-relation",
-            "prev": "일차함수와 그래프",
             "title": "일차함수와 일차방정식의 관계",
-            "next": "기본 도형과 작도",
             "term": "일차방정식의 그래프",
             "termMeaning": "미지수가 2개인 일차방정식 ax+by+c=0을 y에 대해 정리하면 일차함수식 y=(-a/b)x-c/b가 되고, 그 그래프는 일차함수의 그래프와 완전히 같은 직선이 된다",
             "bigPicture": [
@@ -778,7 +775,9 @@
                   "a": "y=x+1과 y=2: x=1 → (1,2). y=-x+5와 y=2: x=3 → (3,2). y=x+1과 y=-x+5: 2x=4→x=2,y=3 → (2,3). 세 꼭짓점은 (1,2), (3,2), (2,3)이에요. 세 직선의 교점을 짝지어 전부 구해야 풀리는 문제예요."
                 }
               ]
-            }
+            },
+            "prevSlug": "linear-function-graph",
+            "nextSlug": "basic-figures-construction"
           }
         }
       ]
@@ -794,9 +793,7 @@
           "slug": "basic-figures-construction",
           "content": {
             "id": "basic-figures-construction",
-            "prev": "일차함수와 일차방정식의 관계",
             "title": "기본 도형과 작도",
-            "next": "삼각형과 사각형의 성질",
             "term": "작도",
             "termMeaning": "눈금 없는 자와 컴퍼스만 사용해서 도형을 정확하게 그리는 것",
             "bigPicture": [
@@ -876,7 +873,9 @@
                   "a": "삼각형이 되려면 두 변의 합보다 나머지 변이 작아야 하고, 두 변의 차보다는 커야 해요. 즉 6-4 < x < 6+4, 2<x<10."
                 }
               ]
-            }
+            },
+            "prevSlug": "function-equation-relation",
+            "nextSlug": "triangle-quadrilateral-properties"
           }
         },
         {
@@ -885,9 +884,7 @@
           "slug": "triangle-quadrilateral-properties",
           "content": {
             "id": "triangle-quadrilateral-properties",
-            "prev": "기본 도형과 작도",
             "title": "삼각형과 사각형의 성질",
-            "next": "도형의 닮음",
             "term": "이등변삼각형",
             "termMeaning": "두 변의 길이가 같은 삼각형",
             "bigPicture": [
@@ -968,7 +965,9 @@
                   "a": "AB=AC(가정), AD는 공통, 각BAD=각CAD(이등분선이므로)라서 SAS 조건으로 두 삼각형은 합동이에요. 이 합동으로부터 BD=CD, 즉 이등분선이 밑변도 이등분한다는 게 증명돼요."
                 }
               ]
-            }
+            },
+            "prevSlug": "basic-figures-construction",
+            "nextSlug": "similarity-of-figures"
           }
         },
         {
@@ -977,9 +976,7 @@
           "slug": "similarity-of-figures",
           "content": {
             "id": "similarity-of-figures",
-            "prev": "삼각형과 사각형의 성질",
             "title": "도형의 닮음",
-            "next": "피타고라스 정리",
             "term": "닮음",
             "termMeaning": "모양은 같고 크기만 다른 두 도형의 관계 — 대응하는 각의 크기가 같고, 대응하는 변의 길이의 비가 일정하다",
             "bigPicture": [
@@ -1059,7 +1056,9 @@
                   "a": "부피는 세 방향(가로·세로·높이)으로 늘어나니까 닮음비의 세제곱: 2³:3³=8:27"
                 }
               ]
-            }
+            },
+            "prevSlug": "triangle-quadrilateral-properties",
+            "nextSlug": "pythagorean-theorem"
           }
         },
         {
@@ -1068,9 +1067,7 @@
           "slug": "pythagorean-theorem",
           "content": {
             "id": "pythagorean-theorem",
-            "prev": "도형의 닮음",
             "title": "피타고라스 정리",
-            "next": "경우의 수와 확률",
             "term": "피타고라스 정리",
             "termMeaning": "직각삼각형에서 직각을 낀 두 변의 제곱의 합이 빗변의 제곱과 같다 (a²+b²=c²)",
             "bigPicture": [
@@ -1154,7 +1151,9 @@
                   "a": "먼저 바닥 대각선: √(3²+4²)=5. 이 5를 밑변 삼아 높이 12와 다시 피타고라스: √(5²+12²)=√(25+144)=√169=13. 피타고라스 정리를 두 번 연속 써야 풀리는 문제예요."
                 }
               ]
-            }
+            },
+            "prevSlug": "similarity-of-figures",
+            "nextSlug": "counting-probability"
           }
         }
       ]
@@ -1170,9 +1169,7 @@
           "slug": "counting-probability",
           "content": {
             "id": "counting-probability",
-            "prev": "피타고라스 정리",
             "title": "경우의 수와 확률",
-            "next": "자료의 정리와 해석",
             "term": "확률",
             "termMeaning": "어떤 사건이 일어날 가능성을 0과 1 사이의 수로 나타낸 것",
             "bigPicture": [
@@ -1259,7 +1256,8 @@
                   "a": "합이 짝수가 되려면 두 눈이 모두 짝수이거나 모두 홀수여야 해요. 각각 확률 1/2이고, '모두 짝수 또는 모두 홀수'는 서로 겹치지 않으니 더할 수 있어요: (1/2×1/2)+(1/2×1/2)=1/4+1/4=1/2"
                 }
               ]
-            }
+            },
+            "prevSlug": "pythagorean-theorem"
           }
         },
         {
@@ -1268,9 +1266,7 @@
           "slug": "data-representative-values",
           "content": {
             "id": "data-representative-values",
-            "prev": "경우의 수와 확률",
             "title": "자료의 정리와 해석",
-            "next": null,
             "term": "대푯값",
             "termMeaning": "자료 전체를 하나의 수로 요약해서 대표하는 값 (평균, 중앙값, 최빈값)",
             "bigPicture": [
@@ -1353,7 +1349,8 @@
                   "a": "평균 = (300×9+3000)/10 = (2700+3000)/10 = 570만원. 근데 실제로 570만원 받는 사람은 아무도 없어요. 극단값(사장의 급여) 하나가 평균을 크게 왜곡해서, 이 경우 평균보다 중앙값(300만원)이 '전형적인 직원'을 훨씬 잘 대표해요."
                 }
               ]
-            }
+            },
+            "prevSlug": "counting-probability"
           }
         }
       ]
