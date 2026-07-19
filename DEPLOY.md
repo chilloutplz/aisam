@@ -19,7 +19,7 @@
 4. 빌드/실행 설정에서 **설정변경** 클릭 후:
    - **시작 명령어**:
      ```
-     gunicorn config.wsgi:application --bind 0.0.0.0:8000
+     gunicorn config.wsgi:application --bind 0.0.0.0:8000 --timeout 60
      ```
    - **사전 실행(prestart) 명령어**:
      ```

@@ -7,13 +7,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Domain, Unit
-from prompts.builder import build_system_prompt
 
 
 @require_GET
 def curriculum_list(request):
-    """학기 -> 영역 -> 단원(제목/완료여부)만 가볍게 내려주는 목차 API"""
-    domains = Domain.objects.prefetch_related("units").all()
+    """학기 -> 영역 -> 단원(제목/완료여부)만 가볍게 내려주는 목차 API.
+    ?subject=수학&grade=중2 쿼리로 필터링 (기본값: 수학/중2, 지금 프론트엔드와 호환)"""
+    subject = request.GET.get("subject", "수학")
+    grade = request.GET.get("grade", "중2")
+    domains = Domain.objects.filter(subject=subject, grade=grade).prefetch_related("units")
     data = []
     for d in domains:
         data.append({
@@ -38,6 +40,9 @@ def unit_detail(request, unit_id):
     return JsonResponse({"id": unit.id, "title": unit.title, **unit.content})
 
 
+from .prompts import build_system_prompt
+
+
 def call_openrouter(system_prompt, messages):
     """OpenRouter 무료 API 호출 (기본 모델: Qwen). OPENROUTER_API_KEY 환경변수 필요."""
     api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -60,17 +65,11 @@ def call_openrouter(system_prompt, messages):
 
     try:
         resp = requests.post(url, headers=headers, json=body, timeout=30)
-        # if resp.status_code == 429:
-            # return None, (
-            #     "오늘 무료 사용 횟수를 다 썼어요 (OpenRouter 무료 모델은 하루 50회 제한). "
-            #     "내일 다시 쓰거나, OpenRouter 계정에 $10을 충전하면 하루 1000회로 늘어나요."
-            # )
-            
-        if resp.status_code != 200:
-            print(resp.status_code)
-            print(resp.text)
-            return None, resp.text
-        
+        if resp.status_code == 429:
+            return None, (
+                "오늘 무료 사용 횟수를 다 썼어요 (OpenRouter 무료 모델은 하루 50회 제한). "
+                "내일 다시 쓰거나, OpenRouter 계정에 $10을 충전하면 하루 1000회로 늘어나요."
+            )
         resp.raise_for_status()
         data = resp.json()
         text = data["choices"][0]["message"]["content"]
@@ -99,11 +98,7 @@ def chat_proxy(request, unit_id):
         print("[chat_proxy] 잘못된 payload", flush=True)
         return JsonResponse({"error": "invalid payload, expected {messages: [...]}"}, status=200)
 
-    try:
-        system_prompt = build_system_prompt(unit.content, unit.title)
-    except Exception as e:
-        print(f"[chat_proxy] 프롬프트 빌드 중 치명적 에러: {str(e)}", flush=True)
-        return JsonResponse({"error": f"서버 내부 프롬프트 생성 실패: {str(e)}"}, status=200)
+    system_prompt = build_system_prompt(unit.domain.subject, unit.title, unit.content)
     print("[chat_proxy] OpenRouter 호출 시작...", flush=True)
     reply, error = call_openrouter(system_prompt, messages)
 
