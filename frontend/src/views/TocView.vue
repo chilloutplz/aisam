@@ -2,8 +2,8 @@
   <div class="page">
     <button class="back" @click="goHome">◂ 학교급·과목 다시 고르기</button>
 
-    <div class="breadcrumb">수학 <span class="sep">▸</span> 중학교 2학년</div>
-    <h1 class="chalk-title" style="font-size: 32px; margin: 0 0 16px;">중2 수학 목차</h1>
+    <div class="breadcrumb">{{ subjectLabel }} <span class="sep">▸</span> {{ gradeLabel }}</div>
+    <h1 class="chalk-title" style="font-size: 32px; margin: 0 0 16px;">{{ gradeShort }} {{ subjectLabel }} 목차</h1>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -64,12 +64,30 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { fetchCurriculum } from "../api.js";
 import { saveState, clearState, loadState } from "../storage.js";
 
 const router = useRouter();
+
+const LEVEL_PREFIX = { elementary: "초", middle: "중", high: "고" };
+
+// "2학년" -> "2", "3학년" -> "3" 식으로 숫자만 추출해서 백엔드가 쓰는 "중2" 형태로 변환
+function toBackendGrade(level, grade) {
+  const num = (grade || "").replace("학년", "");
+  return `${LEVEL_PREFIX[level] || ""}${num}`;
+}
+
+const savedState = loadState() || {};
+const currentSubject = savedState.subject || "수학";
+const currentGrade = toBackendGrade(savedState.level, savedState.grade) || "중2";
+
+const subjectLabel = currentSubject;
+const gradeShort = currentGrade;
+const gradeLabel = savedState.level && savedState.grade
+  ? `${{ elementary: "초등학교", middle: "중학교", high: "고등학교" }[savedState.level]} ${savedState.grade}`
+  : "중학교 2학년";
 
 function openUnit(unitId) {
   saveState({ lastUnitId: unitId });
@@ -81,22 +99,25 @@ function goHome() {
   router.push({ name: "home" });
 }
 
-const SEMESTERS_MAP = [
-  { label: "1학기", domains: ["수와 연산", "문자와 식"] },
-  { label: "2학기", domains: ["함수", "기하", "확률과 통계"] },
-];
-
 const domains = ref([]);
 const loading = ref(true);
 const error = ref(null);
-const openSemester = ref("1학기");
+const openSemester = ref(null);
 const openDomain = ref(null);
 
 const doneCount = ref(0);
 const totalCount = ref(0);
 
+// 학기 목록을 하드코딩하지 않고, 실제로 받아온 domains의 semester 필드에서 뽑아낸다.
+// 이렇게 하면 학년마다 어떤 영역이 몇 학기인지 달라져도(예: 중2는 함수가 2학기, 중3은 1학기)
+// 항상 실제 데이터 기준으로 맞게 그룹핑된다.
+const semesters = computed(() => {
+  const labels = [...new Set(domains.value.map((d) => d.semester))];
+  return labels.sort().map((label) => ({ label }));
+});
+
 function domainsFor(sem) {
-  return domains.value.filter((d) => sem.domains.includes(d.domain));
+  return domains.value.filter((d) => d.semester === sem.label);
 }
 function semDone(sem) {
   return domainsFor(sem).reduce((sum, d) => sum + doneInDomain(d), 0);
@@ -116,7 +137,7 @@ function toggleDomain(name) {
 
 onMounted(async () => {
   try {
-    const data = await fetchCurriculum();
+    const data = await fetchCurriculum(currentSubject, currentGrade);
     domains.value = data.domains;
     totalCount.value = domains.value.reduce((sum, d) => sum + d.units.length, 0);
     doneCount.value = domains.value.reduce((sum, d) => sum + doneInDomain(d), 0);
@@ -129,10 +150,10 @@ onMounted(async () => {
 
     if (lastUnitDomain) {
       openDomain.value = lastUnitDomain.domain;
-      const sem = SEMESTERS_MAP.find((s) => s.domains.includes(lastUnitDomain.domain));
-      if (sem) openSemester.value = sem.label;
+      openSemester.value = lastUnitDomain.semester;
     } else if (domains.value.length) {
       openDomain.value = domains.value[0].domain;
+      openSemester.value = domains.value[0].semester;
     }
   } catch (e) {
     error.value = e.message;
@@ -140,8 +161,6 @@ onMounted(async () => {
     loading.value = false;
   }
 });
-
-const semesters = SEMESTERS_MAP;
 </script>
 
 <style scoped>

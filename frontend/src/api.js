@@ -1,7 +1,7 @@
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8000/api";
 
-export async function fetchCurriculum() {
-  const res = await fetch(`${API_BASE}/curriculum/`);
+export async function fetchCurriculum(subject = "수학", grade = "중2") {
+  const res = await fetch(`${API_BASE}/curriculum/?subject=${encodeURIComponent(subject)}&grade=${encodeURIComponent(grade)}`);
   if (!res.ok) throw new Error("목차를 불러오지 못했어요");
   return res.json();
 }

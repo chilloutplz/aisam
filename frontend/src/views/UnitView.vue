@@ -30,20 +30,22 @@
       </div>
 
       <section class="section">
-        <h2 class="chalk-heading section-heading" style="color:#f2c94c;">왜 {{ unit.term }}가 필요했을까</h2>
-        <p v-for="(p, i) in unit.bigPicture" :key="i" class="paragraph">{{ p }}</p>
+        <h2 class="chalk-heading section-heading" style="color:#f2c94c;">{{ unit.term }}란?</h2>
+        <p class="paragraph"><MathText :text="unit.termMeaning" /></p>
+        <h2 class="chalk-heading section-heading" style="color:#f2c94c; margin-top: 20px;">왜 {{ unit.term }}가 필요했을까</h2>
+        <p v-for="(p, i) in unit.bigPicture" :key="i" class="paragraph"><MathText :text="p" /></p>
       </section>
 
       <section class="name-origin">
         <h2 class="chalk-heading section-heading" style="color:#c58fe8;">이름은 왜 '{{ unit.term }}'일까</h2>
-        <p class="paragraph small">{{ unit.nameOrigin }}</p>
+        <p class="paragraph small"><MathText :text="unit.nameOrigin" /></p>
       </section>
 
       <section class="skills">
         <h2 class="chalk-heading section-heading" style="color:#6fcf97;">핵심 스킬</h2>
         <div class="skill-card" v-for="(skill, i) in unit.coreSkills" :key="i">
           <h3 class="skill-name">{{ skill.name }}</h3>
-          <p class="skill-explain">{{ skill.explain }}</p>
+          <p class="skill-explain"><MathText :text="skill.explain" /></p>
           <Diagram v-if="skill.visual" :type="skill.visual" chalk="#f2c94c" />
         </div>
       </section>
@@ -100,6 +102,7 @@ import { useRouter } from "vue-router";
 import { fetchUnit, sendChatMessage } from "../api.js";
 import Diagram from "../components/Diagram.vue";
 import QuizSection from "../components/QuizSection.vue";
+import MathText from "../components/MathText.vue";
 import { saveState } from "../storage.js";
 
 const router = useRouter();

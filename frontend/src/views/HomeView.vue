@@ -65,7 +65,10 @@ const LEVELS = [
 const SUBJECTS = ["수학", "영어", "국어", "과학", "사회"];
 
 function isReady(level, grade, subject) {
-  return level === "middle" && grade === "2학년" && subject === "수학";
+  if (subject !== "수학") return false;
+  if (level === "middle") return ["2학년", "3학년"].includes(grade);
+  if (level === "high") return ["1학년", "2학년", "3학년"].includes(grade);
+  return false;
 }
 
 const level = ref(null);

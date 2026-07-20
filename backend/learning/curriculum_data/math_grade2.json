@@ -1257,7 +1257,8 @@
                 }
               ]
             },
-            "prevSlug": "pythagorean-theorem"
+            "prevSlug": "pythagorean-theorem",
+            "nextSlug": "data-representative-values"
           }
         },
         {
@@ -1350,7 +1351,8 @@
                 }
               ]
             },
-            "prevSlug": "counting-probability"
+            "prevSlug": "counting-probability",
+            "nextSlug": "real-numbers-operations"
           }
         }
       ]

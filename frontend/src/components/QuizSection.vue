@@ -5,7 +5,7 @@
       <button class="shuffle-btn" :style="{ color: chalk }" @click="goToNext">⤭ 다른 문제 풀기</button>
     </div>
 
-    <p class="question">{{ item.q }}</p>
+    <p class="question"><MathText :text="item.q" /></p>
 
     <Diagram v-if="item.visual" :type="item.visual" :chalk="chalk" />
 
@@ -26,7 +26,7 @@
 
     <div v-else class="reveal">
       <p class="your-answer">네가 쓴 답: <span>{{ userAnswer }}</span></p>
-      <p class="correct-answer"><span :style="{ color: chalk }">정답 · </span>{{ item.a }}</p>
+      <p class="correct-answer"><span :style="{ color: chalk }">정답 · </span><MathText :text="item.a" /></p>
       <div class="reveal-actions">
         <button class="retry" @click="retrySame">같은 문제 다시 풀기</button>
         <button class="next" :style="{ color: chalk }" @click="goToNext">다른 문제 풀어보기 →</button>
@@ -38,6 +38,7 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import Diagram from "./Diagram.vue";
+import MathText from "./MathText.vue";
 
 const props = defineProps({
   bank: { type: Array, required: true },
