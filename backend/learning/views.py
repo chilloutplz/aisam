@@ -9,17 +9,38 @@ from django.views.decorators.http import require_GET, require_POST
 from .models import Domain, Unit
 
 
+GRADE_ORDER = ["초1", "초2", "초3", "초4", "초5", "초6", "중1", "중2", "중3", "고1", "고2", "고3"]
+
+
 @require_GET
 def curriculum_list(request):
-    """학기 -> 영역 -> 단원(제목/완료여부)만 가볍게 내려주는 목차 API.
-    ?subject=수학&grade=중2 쿼리로 필터링 (기본값: 수학/중2, 지금 프론트엔드와 호환)"""
+    """영역 -> 단원(제목/완료여부) 목차 API.
+    ?subject=수학 만 주면 그 과목의 전체 학년을 다 내려주고(학년을 넘나드는 하나의 지도),
+    ?subject=수학&grade=중2 처럼 grade까지 주면 그 학년만 필터링."""
     subject = request.GET.get("subject", "수학")
-    grade = request.GET.get("grade", "중2")
-    domains = Domain.objects.filter(subject=subject, grade=grade).prefetch_related("units")
+    grade = request.GET.get("grade")
+
+    qs = Domain.objects.filter(subject=subject)
+    if grade:
+        qs = qs.filter(grade=grade)
+    domains = list(qs.prefetch_related("units"))
+
+    # 학년을 "고1,고2,고3"이 "중1,중2,중3"보다 유니코드상 앞이라 잘못 정렬되는 걸 막기 위해
+    # 실제 교육 순서(GRADE_ORDER) 기준으로 명시적으로 정렬한다.
+    def sort_key(d):
+        try:
+            grade_idx = GRADE_ORDER.index(d.grade)
+        except ValueError:
+            grade_idx = len(GRADE_ORDER)
+        return (grade_idx, d.order)
+
+    domains.sort(key=sort_key)
+
     data = []
     for d in domains:
         data.append({
             "domain": d.name,
+            "grade": d.grade,
             "chalk": d.chalk_color,
             "semester": d.semester,
             "units": [

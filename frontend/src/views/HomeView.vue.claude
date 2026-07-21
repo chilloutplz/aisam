@@ -1,0 +1,106 @@
+<template>
+  <div class="page">
+    <h1 class="chalk-title" style="font-size: 32px; margin: 0 0 4px;">AI Sam</h1>
+    <p style="font-size: 13px; color: rgba(241,237,228,0.45); margin: 0 0 32px;">
+      과목을 골라서 시작해봐
+    </p>
+
+    <div class="block">
+      <h2 class="label">과목</h2>
+      <div class="choices">
+        <button
+          v-for="s in SUBJECTS"
+          :key="s.name"
+          class="choice"
+          :class="{ active: subject === s.name, disabled: !s.ready }"
+          @click="selectSubject(s)"
+        >{{ s.name }}<span v-if="!s.ready" class="soon">준비중</span></button>
+      </div>
+    </div>
+
+    <p v-if="notReadyYet" class="notice">
+      {{ subject }}은(는) 아직 준비 중이에요. 지금은 수학만 만들어져 있어요.
+    </p>
+  </div>
+</template>
+
+<script setup>
+import { ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { saveState } from "../storage.js";
+
+const router = useRouter();
+
+const SUBJECTS = [
+  { name: "수학", ready: true },
+  { name: "과학", ready: false },
+];
+
+const subject = ref(null);
+const notReadyYet = ref(false);
+
+function selectSubject(s) {
+  subject.value = s.name;
+  if (!s.ready) {
+    notReadyYet.value = true;
+    return;
+  }
+  notReadyYet.value = false;
+  saveState({ subject: s.name, lastUnitId: null });
+  router.push({ name: "toc" });
+}
+</script>
+
+<style scoped>
+.block {
+  margin-bottom: 24px;
+}
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(241, 237, 228, 0.5);
+  margin: 0 0 8px;
+}
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.choice {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  background: rgba(241, 237, 228, 0.06);
+  border: 1px solid rgba(241, 237, 228, 0.18);
+  color: rgba(241, 237, 228, 0.75);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.choice.active {
+  background: rgba(86, 163, 217, 0.2);
+  border-color: #56a3d9;
+  color: #8fc4e8;
+}
+.choice.disabled {
+  opacity: 0.5;
+}
+.soon {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(241, 237, 228, 0.1);
+  color: rgba(241, 237, 228, 0.4);
+}
+.notice {
+  margin-top: 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(241, 237, 228, 0.05);
+  color: rgba(241, 237, 228, 0.5);
+}
+</style>

@@ -20,7 +20,7 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (to.name === "home") {
     const state = loadState();
-    if (state?.level && state?.grade && state?.subject) {
+    if (state?.subject) {
       if (state.lastUnitId) {
         return { name: "unit", params: { id: state.lastUnitId } };
       }
