@@ -1,9 +1,11 @@
 <template>
-  <div class="page">
-    <button class="back" @click="goHome">◂ 과목 다시 고르기</button>
+  <div class="page-wide">
+    <div class="header-row">
+      <button class="back" @click="goHome">◂ 과목 다시 고르기</button>
+    </div>
 
     <div class="breadcrumb">{{ subjectLabel }} <span class="sep">▸</span> 전체 학년</div>
-    <h1 class="chalk-title" style="font-size: 32px; margin: 0 0 16px;">{{ subjectLabel }} 목차</h1>
+    <h1 class="chalk-title" style="font-size: 28px; margin: 0 0 12px;">{{ subjectLabel }} 목차</h1>
 
     <div v-if="loading" class="loading">불러오는 중...</div>
     <div v-else-if="error" class="error">{{ error }}</div>
@@ -19,33 +21,28 @@
         </div>
       </div>
 
-      <section v-for="g in grades" :key="g" class="grade-block">
-        <button class="grade-header" :class="{ open: openGrade === g }" @click="toggleGrade(g)">
-          <span class="chalk-title grade-title">{{ g }}</span>
-          <span class="count">{{ gradeDone(g) }}/{{ gradeTotal(g) }}</span>
-          <span class="chevron">{{ openGrade === g ? '▲' : '▼' }}</span>
-        </button>
+      <p class="hint">◂ ▸ 옆으로 넘기면 다른 학년이 보여요</p>
 
-        <div v-if="openGrade === g" class="domains">
-          <section v-for="d in domainsForGrade(g)" :key="d.domain" class="domain">
-            <button
-              class="domain-header"
-              :style="{ borderColor: openDomain === d.domain ? d.chalk : 'rgba(241,237,228,0.15)' }"
-              @click="toggleDomain(d.domain)"
-            >
-              <span class="chalk-heading domain-title" :style="{ color: d.chalk }">{{ d.domain }}</span>
-              <span class="semester-badge">{{ d.semester }}</span>
-              <span class="count">{{ doneInDomain(d) }}/{{ d.units.length }}</span>
-              <span class="chevron">{{ openDomain === d.domain ? '▲' : '▼' }}</span>
-            </button>
+      <div class="board" ref="boardRef">
+        <section v-for="g in grades" :key="g" class="column" :ref="(el) => setColumnRef(el, g)">
+          <div class="column-header">
+            <span class="chalk-title column-title">{{ g }}</span>
+            <span class="column-count">{{ gradeDone(g) }}/{{ gradeTotal(g) }}</span>
+          </div>
 
-            <div v-if="openDomain === d.domain" class="units">
+          <div class="column-body">
+            <div v-for="d in domainsForGrade(g)" :key="d.domain" class="domain-group">
+              <div class="domain-label" :style="{ color: d.chalk }">
+                {{ d.domain }}
+                <span class="semester-badge">{{ d.semester }}</span>
+              </div>
+
               <button
                 v-for="u in d.units"
                 :key="u.id"
-                class="unit-row"
-                :class="{ done: u.status === 'done' }"
-                :style="u.status === 'done' ? { borderColor: d.chalk + '55' } : {}"
+                class="unit-card"
+                :class="{ done: u.status === 'done', current: u.id === lastUnitId }"
+                :style="u.status === 'done' ? { borderColor: d.chalk + '77' } : {}"
                 :disabled="u.status !== 'done'"
                 @click="u.status === 'done' && openUnit(u.id)"
               >
@@ -54,18 +51,17 @@
                 </span>
                 <span class="unit-title">{{ u.title }}</span>
                 <span v-if="u.status !== 'done'" class="badge">준비중</span>
-                <span v-else class="arrow">›</span>
               </button>
             </div>
-          </section>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRouter } from "vue-router";
 import { fetchCurriculum } from "../api.js";
 import { saveState, clearState, loadState } from "../storage.js";
@@ -77,17 +73,21 @@ const GRADE_ORDER = ["초1", "초2", "초3", "초4", "초5", "초6", "중1", "�
 const savedState = loadState() || {};
 const currentSubject = savedState.subject || "수학";
 const subjectLabel = currentSubject;
+const lastUnitId = savedState.lastUnitId || null;
 
 const domains = ref([]);
 const loading = ref(true);
 const error = ref(null);
-const openGrade = ref(null);
-const openDomain = ref(null);
+const boardRef = ref(null);
+const columnRefs = {};
 
 const doneCount = ref(0);
 const totalCount = ref(0);
 
-// 실제 데이터에 존재하는 학년만, 교육과정 순서(GRADE_ORDER) 기준으로 뽑아낸다.
+function setColumnRef(el, grade) {
+  if (el) columnRefs[grade] = el;
+}
+
 const grades = computed(() => {
   const present = [...new Set(domains.value.map((d) => d.grade))];
   return present.sort((a, b) => GRADE_ORDER.indexOf(a) - GRADE_ORDER.indexOf(b));
@@ -105,12 +105,6 @@ function gradeTotal(g) {
 function doneInDomain(d) {
   return d.units.filter((u) => u.status === "done").length;
 }
-function toggleGrade(g) {
-  openGrade.value = openGrade.value === g ? null : g;
-}
-function toggleDomain(name) {
-  openDomain.value = openDomain.value === name ? null : name;
-}
 
 function openUnit(unitId) {
   saveState({ lastUnitId: unitId });
@@ -124,34 +118,36 @@ function goHome() {
 
 onMounted(async () => {
   try {
-    // grade를 안 넘기면 이 과목의 전체 학년을 다 받아온다 (학년을 넘나드는 하나의 지도)
     const data = await fetchCurriculum(currentSubject);
     domains.value = data.domains;
     totalCount.value = domains.value.reduce((sum, d) => sum + d.units.length, 0);
     doneCount.value = domains.value.reduce((sum, d) => sum + doneInDomain(d), 0);
+    loading.value = false;
 
-    const state = loadState();
-    const lastUnitDomain = state?.lastUnitId
-      ? domains.value.find((d) => d.units.some((u) => u.id === state.lastUnitId))
+    // loading이 false가 되어 칸(column)들이 실제로 화면에 그려진 뒤에야
+    // columnRefs가 채워지므로, 반드시 그 다음에 스크롤 위치를 계산해야 한다.
+    await nextTick();
+    const lastUnitDomain = lastUnitId
+      ? domains.value.find((d) => d.units.some((u) => u.id === lastUnitId))
       : null;
-
-    if (lastUnitDomain) {
-      openGrade.value = lastUnitDomain.grade;
-      openDomain.value = lastUnitDomain.domain;
-    } else if (grades.value.length) {
-      openGrade.value = grades.value[0];
-      const firstDomain = domainsForGrade(openGrade.value)[0];
-      if (firstDomain) openDomain.value = firstDomain.domain;
+    const targetGrade = lastUnitDomain ? lastUnitDomain.grade : grades.value[0];
+    const targetEl = columnRefs[targetGrade];
+    if (targetEl && boardRef.value) {
+      boardRef.value.scrollLeft = targetEl.offsetLeft - 12;
     }
   } catch (e) {
     error.value = e.message;
-  } finally {
     loading.value = false;
   }
 });
 </script>
 
 <style scoped>
+.page-wide {
+  width: 100%;
+  padding: 32px 0 24px 16px;
+}
+.header-row { padding-right: 16px; }
 .back {
   display: flex;
   align-items: center;
@@ -160,119 +156,109 @@ onMounted(async () => {
   font-size: 13px;
   color: rgba(241, 237, 228, 0.5);
 }
-.breadcrumb {
-  font-size: 12px;
-  color: rgba(241, 237, 228, 0.45);
-  margin-bottom: 8px;
-}
+.breadcrumb { font-size: 12px; color: rgba(241, 237, 228, 0.45); margin-bottom: 8px; padding-right: 16px; }
 .sep { color: rgba(241, 237, 228, 0.25); }
-.loading, .error { font-size: 14px; color: rgba(241,237,228,0.5); }
+.loading, .error { font-size: 14px; color: rgba(241,237,228,0.5); padding-right: 16px; }
 
 .progress-card {
   border-radius: 12px;
   padding: 16px;
-  margin-bottom: 32px;
+  margin: 0 16px 12px 0;
   background: rgba(86, 163, 217, 0.1);
   border: 1px solid rgba(86, 163, 217, 0.25);
 }
-.progress-row {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
+.progress-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
 .progress-label { font-size: 13px; color: rgba(241,237,228,0.6); }
 .progress-value { font-size: 18px; color: #8fc4e8; }
-.progress-bar {
-  height: 6px;
-  width: 100%;
-  border-radius: 3px;
-  overflow: hidden;
-  background: rgba(241, 237, 228, 0.1);
+.progress-bar { height: 6px; width: 100%; border-radius: 3px; overflow: hidden; background: rgba(241, 237, 228, 0.1); }
+.progress-fill { height: 100%; border-radius: 3px; background: #56a3d9; }
+
+.hint { font-size: 11px; color: rgba(241,237,228,0.35); margin: 0 0 12px; }
+
+.board {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: #56a3d9;
+.column {
+  flex: 0 0 auto;
+  width: 240px;
+  scroll-snap-align: start;
+  background: rgba(241, 237, 228, 0.03);
+  border: 1px solid rgba(241, 237, 228, 0.1);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 260px);
+}
+.column-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(241, 237, 228, 0.1);
+  position: sticky;
+  top: 0;
+  background: #16211c;
+  border-radius: 12px 12px 0 0;
+}
+.column-title { font-size: 18px; color: #f1ede4; }
+.column-count { font-size: 11px; color: rgba(241,237,228,0.4); margin-left: auto; }
+
+.column-body {
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.grade-block { margin-bottom: 16px; }
-.grade-header {
-  width: 100%;
+.domain-group { margin-bottom: 10px; }
+.domain-label {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 2px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 8px;
-  background: rgba(241, 237, 228, 0.04);
-  border: 1px solid rgba(241, 237, 228, 0.12);
+  gap: 6px;
 }
-.grade-header.open {
-  background: rgba(86, 163, 217, 0.12);
-  border-color: #56a3d9;
-}
-.grade-title { font-size: 20px; color: #f1ede4; }
-.grade-header.open .grade-title { color: #8fc4e8; }
-.count { font-size: 11px; color: rgba(241,237,228,0.4); margin-left: 4px; }
-.chevron { margin-left: auto; color: rgba(241,237,228,0.6); }
-
-.domains { padding: 12px 0 0 4px; }
-.domain { margin-bottom: 12px; }
-.domain-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 0;
-  border-bottom: 2px solid;
-}
-.domain-title { font-size: 18px; }
 .semester-badge {
-  font-size: 10px;
+  font-size: 9px;
   padding: 1px 6px;
   border-radius: 999px;
   background: rgba(241, 237, 228, 0.08);
-  color: rgba(241, 237, 228, 0.45);
+  color: rgba(241, 237, 228, 0.4);
 }
 
-.units {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-}
-.unit-row {
+.unit-card {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 9px 10px;
+  margin-bottom: 6px;
   border-radius: 8px;
   text-align: left;
   border: 1px solid rgba(241, 237, 228, 0.08);
-  background: transparent;
+  background: rgba(241, 237, 228, 0.02);
 }
-.unit-row.done {
-  background: rgba(241, 237, 228, 0.05);
-}
+.unit-card.done { background: rgba(241, 237, 228, 0.05); }
+.unit-card.current { box-shadow: 0 0 0 2px #56a3d9 inset; }
 .unit-title {
   flex: 1;
-  font-size: 15px;
-  line-height: 1.4;
-  color: rgba(241, 237, 228, 0.45);
+  font-size: 13px;
+  line-height: 1.35;
+  color: rgba(241, 237, 228, 0.4);
 }
-.unit-row.done .unit-title {
-  color: #f1ede4;
-}
+.unit-card.done .unit-title { color: #f1ede4; }
 .badge {
-  font-size: 11px;
-  padding: 2px 8px;
+  font-size: 10px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: rgba(241, 237, 228, 0.06);
-  color: rgba(241, 237, 228, 0.35);
-}
-.arrow {
-  color: rgba(241, 237, 228, 0.4);
-  font-size: 16px;
+  color: rgba(241, 237, 228, 0.3);
 }
 </style>

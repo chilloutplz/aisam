@@ -79,38 +79,75 @@ from .prompts import build_system_prompt
 
 
 def call_openrouter(system_prompt, messages):
-    """OpenRouter 무료 API 호출 (기본 모델: Qwen). OPENROUTER_API_KEY 환경변수 필요."""
+    """OpenRouter 무료 API 호출. 기본 모델이 불안정하면(타임아웃, 5xx 등)
+    자동으로 재시도하고, 그래도 안 되면 다른 무료 모델로 한 번 더 시도한다.
+    OPENROUTER_API_KEY 환경변수 필요."""
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         return None, "OPENROUTER_API_KEY 환경변수가 설정되어 있지 않습니다."
 
-    model = os.environ.get("OPENROUTER_MODEL", "qwen/qwen3-next-80b-a3b-instruct:free")
-    url = "https://openrouter.ai/api/v1/chat/completions"
+    primary_model = os.environ.get("OPENROUTER_MODEL", "qwen/qwen3-next-80b-a3b-instruct:free")
+    # 기본 모델이 불안정할 때 시도할 대체 무료 모델들 (필요시 .env의 OPENROUTER_FALLBACK_MODELS로 교체 가능,
+    # 콤마로 구분)
+    fallback_env = os.environ.get("OPENROUTER_FALLBACK_MODELS", "")
+    fallback_models = [m.strip() for m in fallback_env.split(",") if m.strip()] or [
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "z-ai/glm-4.5-air:free",
+    ]
+    models_to_try = [primary_model] + [m for m in fallback_models if m != primary_model]
 
+    url = "https://openrouter.ai/api/v1/chat/completions"
     chat_messages = [{"role": "system", "content": system_prompt}]
     for m in messages:
         role = "user" if m["role"] == "user" else "assistant"
         chat_messages.append({"role": role, "content": m["content"]})
 
-    body = {"model": model, "messages": chat_messages}
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
 
-    try:
-        resp = requests.post(url, headers=headers, json=body, timeout=30)
-        if resp.status_code == 429:
-            return None, (
-                "오늘 무료 사용 횟수를 다 썼어요 (OpenRouter 무료 모델은 하루 50회 제한). "
-                "내일 다시 쓰거나, OpenRouter 계정에 $10을 충전하면 하루 1000회로 늘어나요."
-            )
-        resp.raise_for_status()
-        data = resp.json()
-        text = data["choices"][0]["message"]["content"]
-        return text, None
-    except Exception as e:
-        return None, str(e)
+    last_error = None
+    rate_limited = False
+
+    for model in models_to_try:
+        body = {"model": model, "messages": chat_messages}
+        # 같은 모델로 최대 2번(첫 시도 + 재시도 1번)까지 해보고, 그래도 안 되면 다음 모델로 넘어간다.
+        for attempt in range(2):
+            try:
+                resp = requests.post(url, headers=headers, json=body, timeout=30)
+
+                if resp.status_code == 429:
+                    rate_limited = True
+                    last_error = "rate_limited"
+                    break  # 이 모델을 재시도해도 소용없음(계정 전체 한도), 바로 다음 모델로
+
+                if resp.status_code >= 500:
+                    # 서버 쪽 일시적 문제 - 재시도할 가치 있음
+                    last_error = f"서버 응답 {resp.status_code}"
+                    continue
+
+                resp.raise_for_status()
+                data = resp.json()
+                text = data["choices"][0]["message"]["content"]
+                if text and text.strip():
+                    return text, None
+                last_error = "빈 응답을 받았어요"
+                continue
+
+            except requests.exceptions.Timeout:
+                last_error = "응답 시간 초과"
+                continue
+            except requests.exceptions.RequestException as e:
+                last_error = str(e)
+                continue
+
+    if rate_limited:
+        return None, (
+            "지금 무료 모델들이 다 사용량 한도에 걸렸어요. 잠시 후(또는 내일) 다시 시도해줘. "
+            "계속 이 문제가 있으면 OpenRouter 계정에 $10을 충전하면 하루 한도가 크게 늘어나요."
+        )
+    return None, f"AI 응답을 받아오지 못했어요 ({last_error}). '다시 시도' 버튼을 눌러줘."
 
 
 @csrf_exempt

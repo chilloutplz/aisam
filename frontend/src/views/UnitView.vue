@@ -76,10 +76,14 @@
         </div>
         <div ref="scrollBox" class="chat-box">
           <div v-for="(m, i) in messages" :key="i" class="msg-row" :class="m.role">
-            <div class="msg-bubble" :class="m.role">{{ m.content }}</div>
+            <div class="msg-bubble" :class="m.role"><MathText :text="m.content" /></div>
           </div>
           <div v-if="chatLoading" class="msg-row assistant">
             <div class="msg-bubble assistant loading-bubble">생각 중...</div>
+          </div>
+          <div v-if="chatError" class="error-banner">
+            <p class="error-text">{{ chatError }}</p>
+            <button class="retry-btn" @click="retryLastMessage">↻ 다시 시도</button>
           </div>
         </div>
         <div class="chat-input-row">
@@ -160,22 +164,33 @@ async function scrollToBottom() {
   if (scrollBox.value) scrollBox.value.scrollTop = scrollBox.value.scrollHeight;
 }
 
-async function sendMessage() {
-  const text = input.value.trim();
-  if (!text || chatLoading.value) return;
-  messages.value.push({ role: "user", content: text });
-  input.value = "";
+const chatError = ref(null);
+
+async function attemptSend() {
   chatLoading.value = true;
+  chatError.value = null;
   scrollToBottom();
   try {
     const reply = await sendChatMessage(props.id, messages.value.map((m) => ({ role: m.role, content: m.content })));
     messages.value.push({ role: "assistant", content: reply });
   } catch (e) {
-    messages.value.push({ role: "assistant", content: `연결에 문제가 생겼어: ${e.message}` });
+    chatError.value = e.message || "연결에 문제가 생겼어";
   } finally {
     chatLoading.value = false;
     scrollToBottom();
   }
+}
+
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text || chatLoading.value) return;
+  messages.value.push({ role: "user", content: text });
+  input.value = "";
+  await attemptSend();
+}
+
+function retryLastMessage() {
+  attemptSend();
 }
 </script>
 
@@ -294,6 +309,22 @@ async function sendMessage() {
 .msg-bubble.user { background: rgba(143, 196, 232, 0.18); }
 .msg-bubble.assistant { background: rgba(241, 237, 228, 0.06); }
 .loading-bubble { color: rgba(241, 237, 228, 0.5); }
+.error-banner {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(224, 108, 117, 0.1);
+  border: 1px solid rgba(224, 108, 117, 0.3);
+}
+.error-text { font-size: 13px; color: #e0949a; margin: 0 0 6px; line-height: 1.5; }
+.retry-btn {
+  font-size: 13px;
+  font-weight: 500;
+  color: #e0949a;
+  background: rgba(224, 108, 117, 0.15);
+  padding: 5px 12px;
+  border-radius: 6px;
+}
 .chat-input-row { display: flex; gap: 8px; }
 .chat-input {
   flex: 1;
