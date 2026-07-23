@@ -11,23 +11,12 @@
     <div v-else-if="error" class="error">{{ error }}</div>
 
     <template v-else>
-      <div class="progress-card">
-        <div class="progress-row">
-          <span class="progress-label">완성된 단원</span>
-          <span class="progress-value chalk-heading">{{ doneCount }} / {{ totalCount }}</span>
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" :style="{ width: (doneCount / totalCount) * 100 + '%' }"></div>
-        </div>
-      </div>
-
       <p class="hint">◂ ▸ 옆으로 넘기면 다른 학년이 보여요</p>
 
       <div class="board" ref="boardRef">
         <section v-for="g in grades" :key="g" class="column" :ref="(el) => setColumnRef(el, g)">
           <div class="column-header">
             <span class="chalk-title column-title">{{ g }}</span>
-            <span class="column-count">{{ gradeDone(g) }}/{{ gradeTotal(g) }}</span>
           </div>
 
           <div class="column-body">
@@ -81,9 +70,6 @@ const error = ref(null);
 const boardRef = ref(null);
 const columnRefs = {};
 
-const doneCount = ref(0);
-const totalCount = ref(0);
-
 function setColumnRef(el, grade) {
   if (el) columnRefs[grade] = el;
 }
@@ -95,15 +81,6 @@ const grades = computed(() => {
 
 function domainsForGrade(g) {
   return domains.value.filter((d) => d.grade === g);
-}
-function gradeDone(g) {
-  return domainsForGrade(g).reduce((sum, d) => sum + doneInDomain(d), 0);
-}
-function gradeTotal(g) {
-  return domainsForGrade(g).reduce((sum, d) => sum + d.units.length, 0);
-}
-function doneInDomain(d) {
-  return d.units.filter((u) => u.status === "done").length;
 }
 
 function openUnit(unitId) {
@@ -120,8 +97,6 @@ onMounted(async () => {
   try {
     const data = await fetchCurriculum(currentSubject);
     domains.value = data.domains;
-    totalCount.value = domains.value.reduce((sum, d) => sum + d.units.length, 0);
-    doneCount.value = domains.value.reduce((sum, d) => sum + doneInDomain(d), 0);
     loading.value = false;
 
     // loading이 false가 되어 칸(column)들이 실제로 화면에 그려진 뒤에야
@@ -160,19 +135,6 @@ onMounted(async () => {
 .sep { color: rgba(241, 237, 228, 0.25); }
 .loading, .error { font-size: 14px; color: rgba(241,237,228,0.5); padding-right: 16px; }
 
-.progress-card {
-  border-radius: 12px;
-  padding: 16px;
-  margin: 0 16px 12px 0;
-  background: rgba(86, 163, 217, 0.1);
-  border: 1px solid rgba(86, 163, 217, 0.25);
-}
-.progress-row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
-.progress-label { font-size: 13px; color: rgba(241,237,228,0.6); }
-.progress-value { font-size: 18px; color: #8fc4e8; }
-.progress-bar { height: 6px; width: 100%; border-radius: 3px; overflow: hidden; background: rgba(241, 237, 228, 0.1); }
-.progress-fill { height: 100%; border-radius: 3px; background: #56a3d9; }
-
 .hint { font-size: 11px; color: rgba(241,237,228,0.35); margin: 0 0 12px; }
 
 .board {
@@ -206,7 +168,6 @@ onMounted(async () => {
   border-radius: 12px 12px 0 0;
 }
 .column-title { font-size: 18px; color: #f1ede4; }
-.column-count { font-size: 11px; color: rgba(241,237,228,0.4); margin-left: auto; }
 
 .column-body {
   padding: 10px;
